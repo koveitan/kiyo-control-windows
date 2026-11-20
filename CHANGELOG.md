@@ -2,12 +2,12 @@
 
 ## 0.1.0 — 2026-11-20
 
-First Windows release, ported from [kiyo-control](https://github.com/f0ns/kiyo-control) for macOS.
+First release of the Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control).
 
-- Camera logic (`Kiyo.Core`) split from the UI: control map, Razer commands, profiles, backups, zoom presets.
-- Windows backend through the in-box camera driver: DirectShow camera / proc-amp properties and `IKsControl` for the
-  Razer extension unit, so other apps keep streaming.
-- WPF app with live preview, Camera / Processing / Image tabs, Save / Revert, profiles, backups, tray icon and
-  Launch at Login.
-- `kiyoctl` command-line tool, including a read-only `probe`.
+- All camera settings of the Kiyo Pro Ultra, with a live preview: zoom, pan, tilt, field of view, focus, exposure,
+  ISO and shutter, noise reduction, HDR, lens correction, image settings, mirror and anti-flicker.
+- SAVE and Revert, profiles, zoom presets and automatic backups.
+- Settings are applied again when the camera is plugged in and after the PC wakes from sleep.
+- System tray icon with profiles, zoom presets and Launch at Login.
+- `kiyoctl` command-line tool.
 - Tested on a Kiyo Pro Ultra with firmware 8.21.

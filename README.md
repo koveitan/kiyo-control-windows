@@ -5,7 +5,7 @@
 <h1 align="center">Kiyo Control for Windows</h1>
 
 <p align="center">
-  Camera settings for the <b>Razer Kiyo Pro Ultra</b> (and the standard controls of the <b>Kiyo V2 Pro</b>) on Windows, without Razer Synapse.
+  Camera settings for the <b>Razer Kiyo Pro Ultra</b> on Windows, without Razer Synapse.
 </p>
 
 <p align="center">
@@ -13,110 +13,103 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
 </p>
 
-> **A Windows port of [f0ns/kiyo-control](https://github.com/f0ns/kiyo-control)**, the macOS app by the Kiyo Control
-> contributors. The camera protocol, control map, profiles and behaviour come from that project; this repository
-> rewrites them in C#/.NET with the camera logic split from the UI, and adds a Windows camera backend and app.
-> Both are MIT-licensed.
+The Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control) for macOS.
 
 > **Unofficial.** Kiyo Control for Windows is an independent, community-made project. It is not affiliated with,
 > endorsed by, or supported by Razer Inc. See [Disclaimer](#disclaimer).
 
-## Run it
+## Features
 
-Needs Windows 10/11 and the .NET 10 SDK (`winget install Microsoft.DotNet.SDK.10`).
+- Live preview while you adjust. Nothing is kept until you press **SAVE** (Ctrl+S); **Revert** undoes your changes.
+- **Camera:** zoom, pan and tilt, five zoom presets, Wide / Medium / Narrow field of view, auto or manual focus with
+  face focus, tracking and lighting modes, auto exposure with metering and compensation, or manual ISO and shutter speed.
+- **Processing:** 2D and 3D noise reduction, HDR, lens distortion compensation.
+- **Image:** brightness, contrast, saturation, sharpness, white balance, mirror, anti-flicker.
+- **SAVE** also stores the Razer settings in the camera's own memory, so they stick without the app, also on other computers.
+- Profiles, applied again whenever the camera is plugged in and after your PC wakes from sleep.
+- Automatic backups of the camera's settings, so **Reset All Settings** and **Restore Backup** are always safe.
+- Runs in the system tray, optionally at login: switch profiles and zoom presets without opening the window.
+- Works while Zoom, Teams, OBS and other apps are using the camera.
 
-```powershell
-dotnet run --project src\KiyoControl
-```
+### Supported cameras
 
-Or build a folder you can double-click from:
+| Camera | Support |
+|---|---|
+| Razer Kiyo Pro Ultra | All settings above. Tested with firmware 8.21. |
+| Razer Kiyo V2 Pro | Standard settings only (zoom, focus, exposure, image, anti-flicker). Not yet tested on Windows. |
 
-```powershell
-dotnet publish src\KiyoControl -c Release -o dist\KiyoControl
-.\dist\KiyoControl\KiyoControl.exe
-```
+Firmware updates are not supported. Use Razer's
+[Kiyo Pro Ultra firmware updater](https://mysupport.razer.com/app/answers/detail/a_id/9777).
+
+## Install
+
+You need Windows 10 or 11. There is no installer yet, so you build the app yourself; it takes a minute.
+
+1. Install the .NET 10 SDK. In PowerShell:
+
+   ```powershell
+   winget install Microsoft.DotNet.SDK.10
+   ```
+
+2. Download this repository (**Code › Download ZIP**, then unzip it) or clone it with Git.
+3. In PowerShell, in the repository folder:
+
+   ```powershell
+   dotnet publish src\KiyoControl -c Release -o dist\KiyoControl
+   ```
+
+4. Open `dist\KiyoControl\KiyoControl.exe`. Plug in the camera and the settings appear.
 
 If the preview stays black, turn on **Settings › Privacy & security › Camera › Let desktop apps access your camera**.
 
-## What it does
+For 4K, plug the camera into a USB 3 port. Through a USB 2 hub (such as a keyboard's) it offers up to 1080p.
 
-- Live preview while you adjust; nothing goes into a profile until **SAVE** (Ctrl+S). **Revert** goes back.
-- Camera tab: zoom, pan, tilt, 5 zoom presets (right-click to store), field of view presets, auto/manual focus,
-  Razer focus mode / tracking / lighting, auto exposure with Razer metering and compensation, or manual ISO and shutter.
-- Processing tab: 2D/3D noise reduction, HDR (backlight compensation), lens distortion compensation.
-- Image tab: brightness, contrast, saturation, sharpness, white balance, mirror, anti-flicker.
-- **SAVE** also stores changed Razer settings in the camera's memory (like Synapse), so they stick without the app.
-- Profiles, re-applied when the camera is plugged in and after the PC wakes from sleep.
-- Automatic backups before every reset/restore and on connect (`%APPDATA%\KiyoControl\backups`, last 20 kept).
-- Closing the window keeps it in the **tray**: switch profiles, jump to zoom presets, Launch at Login, Quit.
-- Works while other apps (Zoom, Teams, OBS…) use the camera; the preview then shares the stream read-only.
+## Everyday use
+
+- Change settings and watch the preview. Nothing is kept until you click **SAVE**; **Revert** undoes your changes.
+- To store a zoom preset, right-click one of the numbers 1–5. Click it later to jump back to that view.
+- Closing the window keeps Kiyo Control running in the system tray, so your profile comes back whenever you plug the
+  camera in. Right-click the tray icon to switch profiles, turn on **Launch at Login**, or **Quit**.
+- Made a mess? Click **Reset All Settings**, or the **⋯** button › **Restore Backup**.
+- The resolution menu at the bottom only changes this app's preview. Zoom, Teams and OBS choose their own resolution
+  when they turn the camera on.
+
+### Where your settings are kept
+
+Profiles and backups are in `%APPDATA%\KiyoControl`. The last 20 backups are kept.
+
+### Uninstall
+
+Right-click the tray icon › **Quit**, then delete the app folder. To also remove your profiles, delete
+`%APPDATA%\KiyoControl`. If you turned on Launch at Login, turn it off before quitting.
 
 ## Command line
 
-```powershell
-dotnet build src\kiyoctl
-$k = "src\kiyoctl\bin\Debug\net10.0-windows\kiyoctl.exe"
-& $k info                 # model, firmware, Razer extension unit node
-& $k list                 # every control with value and range
-& $k probe                # raw driver properties and topology (read-only)
-& $k set zoom 200         # 2.0x
-& $k razer mirror on      # Razer commands: mirror, nr3d, nr2d, metering, ev, iso, shutter, focus, tracking, lens
-& $k backup
-& $k restore <backup.json>
-& $k save-to-camera --yes # store Razer settings in the camera's memory
-```
-
-## Tests
+`kiyoctl` changes settings without the app, for scripts or a Stream Deck button:
 
 ```powershell
-dotnet test
+dotnet publish src\kiyoctl -c Release -o dist\kiyoctl
+.\dist\kiyoctl\kiyoctl.exe info              # camera model and firmware version
+.\dist\kiyoctl\kiyoctl.exe list              # every setting with its value and range
+.\dist\kiyoctl\kiyoctl.exe set zoom 200      # 2.0x zoom
+.\dist\kiyoctl\kiyoctl.exe razer mirror on   # also: nr3d, nr2d, metering, ev, iso, shutter, focus, tracking, lens
+.\dist\kiyoctl\kiyoctl.exe backup
+.\dist\kiyoctl\kiyoctl.exe restore <backup.json>
 ```
 
-55 unit tests for the core (Razer command bytes, controller, profiles, backups, presets) run against a fake camera.
-
-## How it works
-
-```
-src/Kiyo.Core      Platform-independent: control map, Razer commands, profiles, backups, CameraController.
-                   Talks to hardware only through ICameraBackend.
-src/Kiyo.Windows   ICameraBackend for Windows, through the in-box camera driver (usbvideo.sys), so other apps keep streaming:
-                     - standard controls via DirectShow IAMCameraControl / IAMVideoProcAmp
-                     - anti-flicker via the video proc-amp power-line-frequency property
-                     - Razer commands via IKsControl on the extension unit
-                       (GUID 23e49ed0-1178-4f31-ae52-d2fb8a8d3b48, selector 1, reply on selector 2)
-src/kiyoctl        Command-line tool.
-src/KiyoControl    WPF app: settings panel, live preview (Windows.Media.Capture frame reader), tray icon.
-tests/             xUnit tests for Kiyo.Core.
-```
-
-Differences from macOS, where the app sends raw UVC requests:
-
-| | macOS | Windows |
-|---|---|---|
-| Razer extension unit | UVC unit 6 | kernel-streaming topology node (found by probing device-specific nodes; node 2 on the tested camera) |
-| Auto exposure / focus / white balance | separate UVC controls | an *auto* flag on the value property; the app keeps the UVC values (auto exposure 8 = auto, 1 = manual) so profiles read the same |
-| Pan / tilt | arc-seconds (±36000) | degrees (±10) |
-| Anti-flicker | 0 / 1 / 2 | the Kiyo Pro Ultra reports 50 Hz and 60 Hz only |
-| Firmware version | `bcdDevice` | `REV_xxxx` in the hardware id (e.g. 8.21) |
-
-Razer command layouts come from USB captures of Synapse documented by the
-[cameractrls](https://github.com/soyersoyer/cameractrls/issues/19) project. Never send guessed commands to the
-extension unit. Firmware updates are not supported; use Razer's updater.
+Run `kiyoctl help` for everything it can do.
 
 ## Contributing
 
-Issues and pull requests are welcome. Please run `dotnet test` before sending a change, and never add guessed
-commands for the Razer extension unit: only layouts confirmed from USB captures of Synapse. Changes to the shared
-camera logic (Razer commands, control map, profile format) are worth proposing upstream in
-[f0ns/kiyo-control](https://github.com/f0ns/kiyo-control) too.
+Issues and pull requests are welcome. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code is organized
+and how to run the tests.
 
 ## Credits
 
-- [kiyo-control](https://github.com/f0ns/kiyo-control) by the Kiyo Control contributors: the original macOS app
-  this project is ported from (MIT).
-- [cameractrls](https://github.com/soyersoyer/cameractrls) contributors, who documented the Razer command layouts
-  from USB captures ([issue #19](https://github.com/soyersoyer/cameractrls/issues/19)). This project uses those facts
-  about the camera's protocol; it contains no code from cameractrls, Razer Synapse or any other Razer software.
+- [Kiyo Control](https://github.com/f0ns/kiyo-control) for macOS, by the Kiyo Control contributors, which this
+  project is based on.
+- The [cameractrls](https://github.com/soyersoyer/cameractrls) contributors, who documented the Razer camera commands
+  ([issue #19](https://github.com/soyersoyer/cameractrls/issues/19)).
 
 ## Disclaimer
 
@@ -128,12 +121,11 @@ camera logic (Razer commands, control map, profile format) are worth proposing u
   affiliated with, endorsed by, sponsored by, or supported by Razer Inc. For official support, use Razer's own
   software and support channels.
 - **Interoperability.** Kiyo Control for Windows talks to the camera through the standard Windows camera driver and
-  documented vendor commands, solely to make the camera's settings usable without Synapse. It contains no Razer
+  documented camera commands, solely to make the camera's settings usable without Synapse. It contains no Razer
   firmware, software, code, images or other proprietary material.
 - **Warranty of your device.** Changing camera settings with third-party software might affect Razer's support or
   warranty. Check Razer's terms if that matters to you.
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The copyright notice of the original
-[kiyo-control](https://github.com/f0ns/kiyo-control) is kept, as the MIT license requires.
+MIT, see [LICENSE](LICENSE). Based on [Kiyo Control](https://github.com/f0ns/kiyo-control), also MIT-licensed.
