@@ -206,6 +206,9 @@ public sealed class PreviewController(Image target, AppSettings settings)
         _capture?.Dispose();
         _capture = null;
         Mode = null;
+        // Free the last frame (a 4K frame is 33 MB) while the preview is off or the app sits in the tray.
+        _bitmap = null;
+        target.Source = null;
         StateChanged?.Invoke();
     }
 
@@ -248,8 +251,10 @@ public sealed class PreviewController(Image target, AppSettings settings)
             _bitmap = new WriteableBitmap(w, h, 96, 96, PixelFormats.Bgr32, null);
             _width = w;
             _height = h;
-            target.Source = _bitmap;
         }
+        // Starting the preview clears the image while "Starting preview…" shows, so attach it again
+        // even when the frame size is unchanged (e.g. reopening the window from the tray).
+        if (!ReferenceEquals(target.Source, _bitmap)) target.Source = _bitmap;
         _bitmap.WritePixels(new Int32Rect(0, 0, w, h), _buffer, w * 4, 0);
     }
 
