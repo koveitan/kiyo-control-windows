@@ -1,10 +1,25 @@
-# Kiyo Control for Windows
+<p align="center">
+  <img src="src/KiyoControl/Assets/icon-256.png" width="112" alt="Kiyo Control icon">
+</p>
 
-Camera settings for the **Razer Kiyo Pro Ultra** (and the standard controls of the **Kiyo V2 Pro**) on Windows,
-without Razer Synapse. A C#/.NET port of [kiyo-control](https://github.com/f0ns/kiyo-control), the macOS app,
-with the camera logic split from the UI so it can be reused.
+<h1 align="center">Kiyo Control for Windows</h1>
 
-> **Unofficial.** Not affiliated with, endorsed by, or supported by Razer Inc.
+<p align="center">
+  Camera settings for the <b>Razer Kiyo Pro Ultra</b> (and the standard controls of the <b>Kiyo V2 Pro</b>) on Windows, without Razer Synapse.
+</p>
+
+<p align="center">
+  <a href="https://github.com/koveitan/kiyo-control-windows/actions/workflows/build.yml"><img src="https://github.com/koveitan/kiyo-control-windows/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+</p>
+
+> **A Windows port of [f0ns/kiyo-control](https://github.com/f0ns/kiyo-control)**, the macOS app by the Kiyo Control
+> contributors. The camera protocol, control map, profiles and behaviour come from that project; this repository
+> rewrites them in C#/.NET with the camera logic split from the UI, and adds a Windows camera backend and app.
+> Both are MIT-licensed.
+
+> **Unofficial.** Kiyo Control for Windows is an independent, community-made project. It is not affiliated with,
+> endorsed by, or supported by Razer Inc. See [Disclaimer](#disclaimer).
 
 ## Run it
 
@@ -88,6 +103,37 @@ Razer command layouts come from USB captures of Synapse documented by the
 [cameractrls](https://github.com/soyersoyer/cameractrls/issues/19) project. Never send guessed commands to the
 extension unit. Firmware updates are not supported; use Razer's updater.
 
+## Contributing
+
+Issues and pull requests are welcome. Please run `dotnet test` before sending a change, and never add guessed
+commands for the Razer extension unit: only layouts confirmed from USB captures of Synapse. Changes to the shared
+camera logic (Razer commands, control map, profile format) are worth proposing upstream in
+[f0ns/kiyo-control](https://github.com/f0ns/kiyo-control) too.
+
+## Credits
+
+- [kiyo-control](https://github.com/f0ns/kiyo-control) by the Kiyo Control contributors: the original macOS app
+  this project is ported from (MIT).
+- [cameractrls](https://github.com/soyersoyer/cameractrls) contributors, who documented the Razer command layouts
+  from USB captures ([issue #19](https://github.com/soyersoyer/cameractrls/issues/19)). This project uses those facts
+  about the camera's protocol; it contains no code from cameractrls, Razer Synapse or any other Razer software.
+
+## Disclaimer
+
+- **No warranty, use at your own risk.** This software is provided "as is", without warranty of any kind (see
+  [LICENSE](LICENSE)). The authors are not liable for any damage to your camera, computer, data or anything else,
+  including from settings saved to the camera.
+- **Not affiliated with Razer.** Razer, Kiyo, Kiyo Pro Ultra and Synapse are trademarks or registered trademarks of
+  Razer Inc. The names are used only to describe which hardware this software works with. This project is not
+  affiliated with, endorsed by, sponsored by, or supported by Razer Inc. For official support, use Razer's own
+  software and support channels.
+- **Interoperability.** Kiyo Control for Windows talks to the camera through the standard Windows camera driver and
+  documented vendor commands, solely to make the camera's settings usable without Synapse. It contains no Razer
+  firmware, software, code, images or other proprietary material.
+- **Warranty of your device.** Changing camera settings with third-party software might affect Razer's support or
+  warranty. Check Razer's terms if that matters to you.
+
 ## License
 
-MIT, see [LICENSE](LICENSE). Port of kiyo-control (MIT, Kiyo Control contributors).
+MIT, see [LICENSE](LICENSE). The copyright notice of the original
+[kiyo-control](https://github.com/f0ns/kiyo-control) is kept, as the MIT license requires.

@@ -1,0 +1,20 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Unit tests
+        run: dotnet test tests/Kiyo.Core.Tests -c Release
+      - name: Build app and CLI
+        run: |
+          dotnet build src/KiyoControl -c Release
+          dotnet build src/kiyoctl -c Release
