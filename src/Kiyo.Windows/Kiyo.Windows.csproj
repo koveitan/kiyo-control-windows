@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Windows camera access: DirectShow camera/proc-amp properties and the Razer extension unit via IKsControl. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>Kiyo.Windows</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Kiyo.Core\Kiyo.Core.csproj" />
+  </ItemGroup>
+</Project>

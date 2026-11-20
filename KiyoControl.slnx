@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kiyo.Core/Kiyo.Core.csproj" />
+    <Project Path="src/Kiyo.Windows/Kiyo.Windows.csproj" />
+    <Project Path="src/KiyoControl/KiyoControl.csproj" />
+    <Project Path="src/kiyoctl/kiyoctl.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kiyo.Core.Tests/Kiyo.Core.Tests.csproj" />
+  </Folder>
+</Solution>
