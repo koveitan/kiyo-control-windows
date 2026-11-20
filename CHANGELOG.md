@@ -9,5 +9,6 @@ First release of the Windows version of [Kiyo Control](https://github.com/f0ns/k
 - SAVE and Revert, profiles, zoom presets and automatic backups.
 - Settings are applied again when the camera is plugged in and after the PC wakes from sleep.
 - System tray icon with profiles, zoom presets and Launch at Login.
-- `kiyoctl` command-line tool.
+- Installer and portable download, with automatic updates from GitHub Releases.
+- `kiyoctl` command-line tool, included with the app.
 - Tested on a Kiyo Pro Ultra with firmware 8.21.

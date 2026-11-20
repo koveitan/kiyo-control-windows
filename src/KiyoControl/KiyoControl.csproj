@@ -23,7 +23,15 @@
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Program.Main starts the app, so Velopack can run first. -->
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Kiyo.Core\Kiyo.Core.csproj" />
     <ProjectReference Include="..\Kiyo.Windows\Kiyo.Windows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 </Project>

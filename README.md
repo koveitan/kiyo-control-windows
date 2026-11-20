@@ -43,26 +43,28 @@ Firmware updates are not supported. Use Razer's
 
 ## Install
 
-You need Windows 10 or 11. There is no installer yet, so you build the app yourself; it takes a minute.
+You need Windows 10 or 11 (64-bit) and a Razer Kiyo Pro Ultra or Kiyo V2 Pro.
 
-1. Install the .NET 10 SDK. In PowerShell:
+1. Go to the [latest release](https://github.com/koveitan/kiyo-control-windows/releases/latest) and download
+   **KiyoControl-win-Setup.exe**.
+2. Run it. Kiyo Control installs for your user account (no administrator rights needed), adds itself to the Start
+   menu, and opens.
+3. **"Windows protected your PC"?** The app isn't code-signed yet, so Windows SmartScreen warns about it the first
+   time. Click **More info**, then **Run anyway**.
 
-   ```powershell
-   winget install Microsoft.DotNet.SDK.10
-   ```
+Plug in the camera and the settings appear.
 
-2. Download this repository (**Code › Download ZIP**, then unzip it) or clone it with Git.
-3. In PowerShell, in the repository folder:
-
-   ```powershell
-   dotnet publish src\KiyoControl -c Release -o dist\KiyoControl
-   ```
-
-4. Open `dist\KiyoControl\KiyoControl.exe`. Plug in the camera and the settings appear.
+Prefer not to install? Download **KiyoControl-win-Portable.zip** instead, unzip it anywhere and run
+**Kiyo Control.exe**.
 
 If the preview stays black, turn on **Settings › Privacy & security › Camera › Let desktop apps access your camera**.
 
 For 4K, plug the camera into a USB 3 port. Through a USB 2 hub (such as a keyboard's) it offers up to 1080p.
+
+### Updates
+
+Kiyo Control checks for new versions in the background. When one has been downloaded, the tray icon tells you; it
+installs when you quit the app, or right away with **Restart to Update** in the tray menu.
 
 ## Everyday use
 
@@ -80,24 +82,32 @@ Profiles and backups are in `%APPDATA%\KiyoControl`. The last 20 backups are kep
 
 ### Uninstall
 
-Right-click the tray icon › **Quit**, then delete the app folder. To also remove your profiles, delete
-`%APPDATA%\KiyoControl`. If you turned on Launch at Login, turn it off before quitting.
+Open **Settings › Apps › Installed apps**, find **Kiyo Control** and choose **Uninstall**. This also turns off
+Launch at Login. Your profiles stay in `%APPDATA%\KiyoControl`; delete that folder to remove them too.
 
 ## Command line
 
-`kiyoctl` changes settings without the app, for scripts or a Stream Deck button:
+`kiyoctl` changes settings without the app, for scripts or a Stream Deck button. It comes with the app:
 
 ```powershell
-dotnet publish src\kiyoctl -c Release -o dist\kiyoctl
-.\dist\kiyoctl\kiyoctl.exe info              # camera model and firmware version
-.\dist\kiyoctl\kiyoctl.exe list              # every setting with its value and range
-.\dist\kiyoctl\kiyoctl.exe set zoom 200      # 2.0x zoom
-.\dist\kiyoctl\kiyoctl.exe razer mirror on   # also: nr3d, nr2d, metering, ev, iso, shutter, focus, tracking, lens
-.\dist\kiyoctl\kiyoctl.exe backup
-.\dist\kiyoctl\kiyoctl.exe restore <backup.json>
+$kiyoctl = "$env:LOCALAPPDATA\KiyoControl\current\kiyoctl.exe"
+& $kiyoctl info              # camera model and firmware version
+& $kiyoctl list              # every setting with its value and range
+& $kiyoctl set zoom 200      # 2.0x zoom
+& $kiyoctl razer mirror on   # also: nr3d, nr2d, metering, ev, iso, shutter, focus, tracking, lens
+& $kiyoctl backup
+& $kiyoctl restore <backup.json>
 ```
 
 Run `kiyoctl help` for everything it can do.
+
+## Build from source
+
+Install the .NET 10 SDK (`winget install Microsoft.DotNet.SDK.10`), then in the repository folder:
+
+```powershell
+dotnet run --project src\KiyoControl
+```
 
 ## Contributing
 

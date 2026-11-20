@@ -207,6 +207,19 @@ public partial class MainWindow : Window
             link.Click += (_, _) => Process.Start(new ProcessStartInfo(updater) { UseShellExecute = true });
             menu.Items.Add(link);
         }
+
+        menu.Items.Add(new Separator());
+        var app = (App)System.Windows.Application.Current;
+        if (app.Updater.Pending is { } pending)
+        {
+            var restart = new MenuItem { Header = $"Restart to Update ({pending.Version})" };
+            restart.Click += (_, _) => app.RestartToUpdate();
+            menu.Items.Add(restart);
+        }
+        menu.Items.Add(new MenuItem { Header = $"Kiyo Control {Updater.Version}", IsEnabled = false });
+        var project = new MenuItem { Header = "Project Page on GitHub…" };
+        project.Click += (_, _) => Process.Start(new ProcessStartInfo(Updater.RepoUrl) { UseShellExecute = true });
+        menu.Items.Add(project);
         menu.IsOpen = true;
     }
 

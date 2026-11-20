@@ -19,6 +19,8 @@ public partial class App : System.Windows.Application
     private MainWindow? _window;
     private bool _quitting;
 
+    public Updater Updater { get; } = new();
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -44,7 +46,10 @@ public partial class App : System.Windows.Application
         _model = new AppModel();
         _model.Start();
         _window = new MainWindow(_model);
-        _tray = new TrayIcon(_model, ShowWindow, Quit);
+        _tray = new TrayIcon(_model, Updater, ShowWindow, Quit, RestartToUpdate);
+        Updater.UpdateReady += () =>
+            _tray?.ShowHint("Update ready", "A new version of Kiyo Control has been downloaded. It installs when you quit, or choose Restart to Update in the tray menu.");
+        Updater.Start();
 
         if (!e.Args.Contains("--background")) ShowWindow();
     }
@@ -67,6 +72,22 @@ public partial class App : System.Windows.Application
 
     private async void Quit()
     {
+        await ReleaseCameraAsync();
+        // A downloaded update is installed once this process has exited.
+        Updater.ApplyOnExit();
+        Shutdown();
+    }
+
+    /// <summary>Installs the downloaded update and starts the new version.</summary>
+    public async void RestartToUpdate()
+    {
+        await ReleaseCameraAsync();
+        Updater.RestartToUpdate();
+        Shutdown();
+    }
+
+    private async Task ReleaseCameraAsync()
+    {
         _quitting = true;
         if (_window is not null)
         {
@@ -77,7 +98,6 @@ public partial class App : System.Windows.Application
         _model?.Stop();
         _tray?.Dispose();
         _showEvent?.Set();
-        Shutdown();
     }
 
     protected override void OnExit(ExitEventArgs e)

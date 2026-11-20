@@ -24,6 +24,38 @@ dotnet run --project src\KiyoControl
 
 CI runs the tests and builds the app and CLI on every push (`.github/workflows/build.yml`).
 
+## Releases
+
+Releases are built by `.github/workflows/release.yml` when a version tag is pushed:
+
+1. Add a `## x.y.z — date` section to `CHANGELOG.md` and commit it. It becomes the release notes.
+2. Tag and push:
+
+   ```powershell
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+
+The workflow runs the tests, publishes the app and `kiyoctl` self-contained for win-x64 (users need no .NET), packages
+them with [Velopack](https://velopack.io) (`vpk`, pinned in `dotnet-tools.json`) and publishes a GitHub Release with
+`KiyoControl-win-Setup.exe`, a portable zip and the update packages. Installed copies find new releases there.
+
+`Program.Main` runs `VelopackApp.Build().Run()` before anything else, which handles install, update and uninstall
+hooks. `Updater` checks GitHub 30 seconds after start and every 12 hours, downloads in the background, and applies
+the update on quit or from **Restart to Update** in the tray. Copies run from source don't check for updates.
+
+To try packaging locally:
+
+```powershell
+dotnet tool restore
+dotnet publish src\KiyoControl -c Release -r win-x64 --self-contained -o publish
+dotnet publish src\kiyoctl -c Release -r win-x64 --self-contained -o publish
+dotnet vpk pack --packId KiyoControl --packVersion 0.0.1 --packDir publish --mainExe KiyoControl.exe --packTitle "Kiyo Control" --icon src\KiyoControl\Assets\app.ico --shortcuts StartMenuRoot
+```
+
+Releases are not code-signed yet, so SmartScreen warns on first run. `vpk pack` accepts `--signParams` (signtool)
+or Azure Trusted Signing options once a certificate is available.
+
 ## How the Windows backend reaches the camera
 
 - **Standard controls** (zoom, pan, tilt, focus, exposure, brightness, white balance…) go through DirectShow's

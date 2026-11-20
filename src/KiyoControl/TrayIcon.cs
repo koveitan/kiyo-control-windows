@@ -11,14 +11,18 @@ public sealed class TrayIcon : IDisposable
 {
     private readonly WinForms.NotifyIcon _icon;
     private readonly AppModel _model;
+    private readonly Updater _updater;
     private readonly Action _open;
     private readonly Action _quit;
+    private readonly Action _restartToUpdate;
 
-    public TrayIcon(AppModel model, Action open, Action quit)
+    public TrayIcon(AppModel model, Updater updater, Action open, Action quit, Action restartToUpdate)
     {
         _model = model;
+        _updater = updater;
         _open = open;
         _quit = quit;
+        _restartToUpdate = restartToUpdate;
         var stream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"))!.Stream;
         _icon = new WinForms.NotifyIcon
         {
@@ -75,6 +79,9 @@ public sealed class TrayIcon : IDisposable
         };
         menu.Items.Add(login);
         menu.Items.Add(new WinForms.ToolStripSeparator());
+        if (_updater.Pending is { } pending)
+            menu.Items.Add(new WinForms.ToolStripMenuItem($"Restart to Update ({pending.Version})", null, (_, _) => _restartToUpdate()));
+        menu.Items.Add(new WinForms.ToolStripLabel($"Version {Updater.Version}") { ForeColor = System.Drawing.SystemColors.GrayText });
         menu.Items.Add(new WinForms.ToolStripMenuItem("Quit Kiyo Control", null, (_, _) => _quit()));
     }
 

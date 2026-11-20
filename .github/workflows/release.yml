@@ -1,0 +1,47 @@
+name: Release
+
+# Push a version tag to publish a release:  git tag v0.1.0 ; git push origin v0.1.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version from tag
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          "VERSION=$version" | Out-File $env:GITHUB_ENV -Append
+          # Release notes: this version's section of CHANGELOG.md.
+          $log = Get-Content CHANGELOG.md -Raw
+          $m = [regex]::Match($log, "(?ms)^## $([regex]::Escape($version))\b[^\n]*\n(.*?)(?=^## |\z)")
+          $notes = if ($m.Success) { $m.Groups[1].Value.Trim() } else { "Kiyo Control $version" }
+          $notes | Out-File release-notes.md -Encoding utf8
+
+      - name: Unit tests
+        run: dotnet test tests/Kiyo.Core.Tests -c Release
+
+      - name: Publish app and CLI
+        run: |
+          dotnet publish src/KiyoControl -c Release -r win-x64 --self-contained -p:Version=${{ env.VERSION }} -o publish
+          dotnet publish src/kiyoctl -c Release -r win-x64 --self-contained -p:Version=${{ env.VERSION }} -o publish
+
+      - name: Package with Velopack
+        run: |
+          dotnet tool restore
+          # The previous release lets Velopack build a small delta update.
+          dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
+          dotnet vpk pack --packId KiyoControl --packVersion ${{ env.VERSION }} --packDir publish --mainExe KiyoControl.exe --packTitle "Kiyo Control" --packAuthors "Kiyo Control contributors" --icon src/KiyoControl/Assets/app.ico --shortcuts StartMenuRoot --releaseNotes release-notes.md
+
+      - name: Publish GitHub release
+        run: dotnet vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --publish --releaseName "Kiyo Control ${{ env.VERSION }}" --tag ${{ github.ref_name }}
