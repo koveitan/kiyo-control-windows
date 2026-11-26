@@ -13,7 +13,9 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
 </p>
 
-The Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control) for macOS.
+The Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control) for macOS. It has its own version
+numbers; the current release is based on **Kiyo Control 0.6.0 for macOS**, and each entry in the
+[changelog](CHANGELOG.md) says which macOS version it matches.
 
 > **Unofficial.** Kiyo Control for Windows is an independent, community-made project. It is not affiliated with,
 > endorsed by, or supported by Razer Inc. See [Disclaimer](#disclaimer).

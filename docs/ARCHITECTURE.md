@@ -81,8 +81,13 @@ UVC unit ids are needed.
 
 ## Keeping in sync with the macOS version
 
-Ported from upstream 0.6.0. When [f0ns/kiyo-control](https://github.com/f0ns/kiyo-control) changes the command
-list, the control map or the profile format, port the change to `Kiyo.Core` with its tests.
+This project has its own version numbers and records which macOS version it is based on (currently 0.6.0).
+When [f0ns/kiyo-control](https://github.com/f0ns/kiyo-control) changes the command list, the control map or the
+profile format, port the change to `Kiyo.Core` with its tests. After porting a new upstream release, update:
+
+- `ProjectInfo.UpstreamVersion` in `Kiyo.Core`, shown in the app's ⋯ menu and tray menu ("based on macOS 0.6.0")
+- the "based on" sentence near the top of the README
+- the "Based on …" line of the new changelog entry, which also becomes the release notes
 
 ## Differences from the macOS version
 

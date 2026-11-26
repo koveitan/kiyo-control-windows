@@ -2,7 +2,7 @@
 
 ## 0.2.0 — unreleased
 
-Brings the Windows version up to [Kiyo Control 0.6.0](https://github.com/f0ns/kiyo-control/releases/tag/v0.6.0).
+Based on [Kiyo Control 0.6.0 for macOS](https://github.com/f0ns/kiyo-control/releases/tag/v0.6.0).
 
 - Kiyo Pro (1532:0E05) and Kiyo V2 X (1532:0E0C) support for the standard settings; Razer-only settings are hidden.
 - Camera list: when no camera connects, the settings panel lists the USB cameras plugged in and why each can or
@@ -17,13 +17,16 @@ Brings the Windows version up to [Kiyo Control 0.6.0](https://github.com/f0ns/ki
 
 ## 0.1.1 — 2026-11-20
 
+Based on Kiyo Control 0.5.0 for macOS.
+
 - Fixed: after closing the window to the tray and opening it again, the preview stayed black while the camera
   light was on. The same happened when turning the preview off and on.
 - The last preview frame is released while the window is closed, so the app uses less memory in the tray.
 
 ## 0.1.0 — 2026-11-20
 
-First release of the Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control).
+First release of the Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control). Based on
+[Kiyo Control 0.5.0 for macOS](https://github.com/f0ns/kiyo-control/releases/tag/v0.5.0).
 
 - All camera settings of the Kiyo Pro Ultra, with a live preview: zoom, pan, tilt, field of view, focus, exposure,
   ISO and shutter, noise reduction, HDR, lens correction, image settings, mirror and anti-flicker.

@@ -94,7 +94,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(new WinForms.ToolStripSeparator());
         if (_updater.Pending is { } pending)
             menu.Items.Add(new WinForms.ToolStripMenuItem($"Restart to Update ({pending.Version})", null, (_, _) => _restartToUpdate()));
-        menu.Items.Add(new WinForms.ToolStripLabel($"Version {Updater.Version}") { ForeColor = System.Drawing.SystemColors.GrayText });
+        menu.Items.Add(new WinForms.ToolStripLabel($"Version {Updater.Version} · {ProjectInfo.BasedOn}") { ForeColor = System.Drawing.SystemColors.GrayText });
         menu.Items.Add(new WinForms.ToolStripMenuItem("Quit Kiyo Control", null, (_, _) => _quit()));
     }
 

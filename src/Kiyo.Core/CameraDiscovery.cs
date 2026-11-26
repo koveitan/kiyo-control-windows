@@ -39,7 +39,6 @@ public sealed record UsbCamera(string Name, ushort VendorId, ushort ProductId, s
 
 public static class CameraDiscovery
 {
-    public const string ProjectUrl = "https://github.com/koveitan/kiyo-control-windows";
 
     /// <summary>The camera to connect to: the preferred one if it's plugged in and supported, otherwise the first supported one.</summary>
     public static UsbCamera? Choose(IEnumerable<UsbCamera> cameras, string? preferredId)
@@ -78,6 +77,6 @@ public static class CameraDiscovery
             paste here
             ```
             """;
-        return $"{ProjectUrl}/issues/new?title={Uri.EscapeDataString(title)}&body={Uri.EscapeDataString(body)}";
+        return $"{ProjectInfo.ProjectUrl}/issues/new?title={Uri.EscapeDataString(title)}&body={Uri.EscapeDataString(body)}";
     }
 }

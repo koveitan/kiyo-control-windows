@@ -252,10 +252,13 @@ public partial class MainWindow : Window
             restart.Click += (_, _) => app.RestartToUpdate();
             menu.Items.Add(restart);
         }
-        menu.Items.Add(new MenuItem { Header = $"Kiyo Control {Updater.Version}", IsEnabled = false });
+        menu.Items.Add(new MenuItem { Header = $"Kiyo Control {Updater.Version} · {ProjectInfo.BasedOn}", IsEnabled = false });
         var project = new MenuItem { Header = "Project Page on GitHub…" };
-        project.Click += (_, _) => Process.Start(new ProcessStartInfo(Updater.RepoUrl) { UseShellExecute = true });
+        project.Click += (_, _) => Process.Start(new ProcessStartInfo(ProjectInfo.ProjectUrl) { UseShellExecute = true });
         menu.Items.Add(project);
+        var upstream = new MenuItem { Header = "Original macOS Version on GitHub…" };
+        upstream.Click += (_, _) => Process.Start(new ProcessStartInfo(ProjectInfo.UpstreamUrl) { UseShellExecute = true });
+        menu.Items.Add(upstream);
         menu.IsOpen = true;
     }
 

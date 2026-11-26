@@ -12,7 +12,7 @@ namespace KiyoControl;
 /// </summary>
 public sealed class Updater
 {
-    public const string RepoUrl = "https://github.com/koveitan/kiyo-control-windows";
+    public const string RepoUrl = Kiyo.Core.ProjectInfo.ProjectUrl;
 
     private readonly UpdateManager? _manager;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromHours(12) };
