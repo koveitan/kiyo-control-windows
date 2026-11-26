@@ -3,9 +3,10 @@ using Kiyo.Core;
 namespace Kiyo.Core.Tests;
 
 /// <summary>In-memory camera: stores a value per control and records every write.</summary>
-internal sealed class FakeBackend(KiyoDevice? device = null) : ICameraBackend
+internal sealed class FakeBackend(KiyoDevice? device = null, string id = "fake-camera") : ICameraBackend
 {
     public KiyoDevice Device { get; } = device ?? KiyoDevice.ProUltra;
+    public string Id { get; } = id;
     public string? FirmwareVersion => "8.21";
 
     public Dictionary<string, int> Current = [];

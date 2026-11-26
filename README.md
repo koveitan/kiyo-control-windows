@@ -36,7 +36,16 @@ The Windows version of [Kiyo Control](https://github.com/f0ns/kiyo-control) for 
 | Camera | Support |
 |---|---|
 | Razer Kiyo Pro Ultra | All settings above. Tested with firmware 8.21. |
-| Razer Kiyo V2 Pro | Standard settings only (zoom, focus, exposure, image, anti-flicker). Not yet tested on Windows. |
+| Razer Kiyo Pro | Standard settings only (zoom, focus, exposure, image, anti-flicker). Not yet tested on Windows. |
+| Razer Kiyo V2 Pro | Standard settings only. Not yet tested on Windows. |
+| Razer Kiyo V2 X | Standard settings only. Not yet tested on Windows. |
+
+The Razer-only settings (ISO, shutter, metering, noise reduction, mirror, lens correction…) are hidden on the
+models other than the Pro Ultra, and the app never sends Razer commands to them.
+
+If no camera connects, the settings panel lists the USB cameras plugged in and why each can or can't be used.
+A Razer camera that isn't supported yet gets a **Help add it…** link that opens a prefilled GitHub issue. With
+several Kiyos plugged in, pick one in the **⋯** menu or the tray menu; the preview follows.
 
 Firmware updates are not supported. Use Razer's
 [Kiyo Pro Ultra firmware updater](https://mysupport.razer.com/app/answers/detail/a_id/9777).
@@ -91,6 +100,7 @@ Launch at Login. Your profiles stay in `%APPDATA%\KiyoControl`; delete that fold
 
 ```powershell
 $kiyoctl = "$env:LOCALAPPDATA\KiyoControl\current\kiyoctl.exe"
+& $kiyoctl cameras           # USB cameras plugged in and whether they are supported
 & $kiyoctl info              # camera model and firmware version
 & $kiyoctl list              # every setting with its value and range
 & $kiyoctl set zoom 200      # 2.0x zoom

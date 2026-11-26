@@ -68,7 +68,9 @@ public sealed class PanelBuilder(AppModel model, Dictionary<string, bool> collap
             RazerOptions("Tracking", [(false, "Passive"), (true, "Responsive")], r => r.ResponsiveTracking, (r, v) => r.ResponsiveTracking = (bool)v),
             RazerOptions("Lighting", [(false, "Standard"), (true, "Stylized")], r => r.StylizedLighting, (r, v) => r.StylizedLighting = (bool)v),
         ]);
-        yield return Section("Auto Exposure", toggle: K.AutoExposure, onReset: () => C.ResetToDefault([K.AutoExposure]), content:
+        // Without Razer commands, manual exposure is the standard shutter and gain: reset those too.
+        yield return Section("Auto Exposure", toggle: K.AutoExposure,
+            onReset: () => C.ResetToDefault(C.SupportsRazer ? [K.AutoExposure] : [K.ExposureTime, K.Gain, K.AutoExposure]), content:
         [
             // Kiyo V2 Pro: standard exposure time and gain in manual mode.
             Visible(() => !C.SupportsRazer && !C.IsAuto(K.AutoExposure),

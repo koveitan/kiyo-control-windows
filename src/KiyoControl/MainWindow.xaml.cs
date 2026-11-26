@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private Tab _tab = Tab.Camera;
     private bool _updating;
     private bool _wasConnected;
+    private string? _previewCamera;
 
     /// <summary>Set by the app when quitting, so closing really closes instead of hiding to the tray.</summary>
     public bool AllowClose { get; set; }
@@ -64,27 +65,38 @@ public partial class MainWindow : Window
         _updating = true;
         try
         {
-            var key = (_tab, C.Connected, C.SupportsRazer);
-            if (_builtFor != key)
+            if (!C.Connected)
             {
-                var offset = _builtFor?.Tab == _tab ? SettingsScroll.VerticalOffset : 0;
-                _builder = new PanelBuilder(_model, _collapsed);
-                SettingsHost.Content = _builder.Build(_tab);
-                SettingsScroll.ScrollToVerticalOffset(offset);
-                _builtFor = key;
+                // In place of the disabled controls: the cameras plugged in and why none is connected.
+                SettingsHost.Content = CameraListView.NoCameraCard(_model);
+                _builtFor = null;
+                _builder = null;
             }
             else
             {
-                _builder?.Update();
+                var key = (_tab, C.Connected, C.SupportsRazer);
+                if (_builtFor != key)
+                {
+                    var offset = _builtFor?.Tab == _tab ? SettingsScroll.VerticalOffset : 0;
+                    _builder = new PanelBuilder(_model, _collapsed);
+                    SettingsHost.Content = _builder.Build(_tab);
+                    SettingsScroll.ScrollToVerticalOffset(offset);
+                    _builtFor = key;
+                }
+                else
+                {
+                    _builder?.Update();
+                }
             }
-            SettingsHost.IsEnabled = C.Connected;
-            SettingsHost.Opacity = C.Connected ? 1 : 0.45;
 
             ProfileBox.ItemsSource = null;
             ProfileBox.ItemsSource = C.ProfileNames;
             ProfileBox.SelectedItem = C.ActiveProfile;
             ResetAllButton.IsEnabled = C.Connected;
             SaveButton.IsEnabled = C.IsDirty;
+            SaveButton.ToolTip = C.SupportsRazer
+                ? "Saves this profile (Ctrl+S). Razer settings are also stored in the camera, so they stick without the app."
+                : "Saves this profile (Ctrl+S). Kiyo Control applies it again when the camera is plugged in.";
             RevertButton.IsEnabled = C.IsDirty && C.Connected;
             SummaryText.Text = Summary();
             Title = C.IsDirty ? "Kiyo Control •" : "Kiyo Control";
@@ -98,10 +110,13 @@ public partial class MainWindow : Window
         }
         finally { _updating = false; }
 
-        // A replug (e.g. moving to a USB 3 port) can change the formats the camera offers.
-        if (C.Connected != _wasConnected)
+        // On connect, replug (which can change the formats offered, e.g. on a USB 3 port) or a switch to another
+        // Kiyo, show the camera the settings control.
+        _preview.CameraId = C.CameraId;
+        if (C.Connected != _wasConnected || (C.Connected && !CameraDiscovery.SameDevice(C.CameraId, _previewCamera)))
         {
             _wasConnected = C.Connected;
+            _previewCamera = C.CameraId;
             if (IsVisible && _model.Settings.PreviewEnabled)
             {
                 if (C.Connected) _ = _preview.RestartAsync();
@@ -113,16 +128,22 @@ public partial class MainWindow : Window
 
     private string Summary()
     {
-        if (!C.Connected) return "CONNECT YOUR KIYO";
+        if (!C.Connected) return _model.DisconnectedTitle.ToUpperInvariant();
         var parts = new List<string>();
         if (_preview.Mode is VideoMode m) parts.Add(m.Label);
         parts.Add(Fmt.Zoom(C.Value(K.Zoom)));
         if (C.SupportsRazer) parts.Add($"FOV {Fmt.Fov(C.Value(K.Zoom))}");
         if (C.IsAuto(K.AutoExposure)) parts.Add("AE");
-        else
+        else if (C.SupportsRazer)
         {
             if (C.Razer.Iso is int iso) parts.Add($"ISO {iso}");
             if (C.Razer.ShutterMicroseconds is int us) parts.Add($"SS 1/{1_000_000 / us}S");
+        }
+        else
+        {
+            // Models without Razer commands: the standard exposure time and gain.
+            if (C.Has(K.ExposureTime)) parts.Add($"SS {Fmt.ExposureLog2(C.Value(K.ExposureTime))}");
+            if (C.Has(K.Gain)) parts.Add($"GAIN {C.Value(K.Gain)}");
         }
         parts.Add(C.IsAuto(K.AutoWhiteBalance) ? "AWB" : Fmt.Kelvin(C.Value(K.WhiteBalance)));
         return string.Join("   ", parts).ToUpperInvariant();
@@ -136,14 +157,16 @@ public partial class MainWindow : Window
         {
             PreviewSwitch.IsChecked = _model.Settings.PreviewEnabled;
             PreviewStatus.Text = !_model.Settings.PreviewEnabled ? "Preview off"
-                : !C.Connected ? "Plug in your Razer Kiyo Pro Ultra or Kiyo V2 Pro"
+                : !C.Connected ? "No Kiyo connected"
                 : _preview.Status;
             if (!_model.Settings.PreviewEnabled || !C.Connected) PreviewImage.Source = null;
 
             ModeBox.ItemsSource = _preview.Modes.Select(m => m.Label).ToList();
             ModeBox.SelectedIndex = _preview.Mode is VideoMode mode ? _preview.Modes.IndexOf(mode) : -1;
             ModeBox.IsEnabled = _preview.Running && !_preview.Shared && _preview.Modes.Count > 1;
-            Usb2Warning.Visibility = _preview.Modes.Count > 0 && _preview.Modes.All(m => m.Height < 2160)
+            ModeBox.Visibility = _preview.Modes.Count > 0 ? Visibility.Visible : Visibility.Hidden;
+            // Only for cameras that can stream 4K: a 1080p camera loses nothing over USB 2.
+            Usb2Warning.Visibility = C.Connected && C.Device.SupportsFourK && _preview.Modes.Count > 0 && _preview.Modes.All(m => m.Height < 2160)
                 ? Visibility.Visible : Visibility.Collapsed;
             SummaryText.Text = Summary();
         }
@@ -198,6 +221,19 @@ public partial class MainWindow : Window
         var reveal = new MenuItem { Header = "Show Backups in File Explorer" };
         reveal.Click += (_, _) => Process.Start(new ProcessStartInfo("explorer.exe", $"\"{C.Store.BackupsDir}\"") { UseShellExecute = true });
         menu.Items.Add(reveal);
+
+        // With two or more supported cameras plugged in, switch between them.
+        if (_model.SupportedCameras.Count > 1)
+        {
+            menu.Items.Add(new Separator());
+            menu.Items.Add(new MenuItem { Header = "Camera", IsEnabled = false });
+            foreach (var camera in _model.SupportedCameras)
+            {
+                var item = new MenuItem { Header = camera.Name, IsCheckable = true, IsChecked = CameraDiscovery.SameDevice(camera.Id, C.CameraId) };
+                item.Click += (_, _) => _model.Select(camera);
+                menu.Items.Add(item);
+            }
+        }
 
         if (C.Device.FirmwareUpdater is string updater)
         {

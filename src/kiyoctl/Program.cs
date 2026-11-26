@@ -10,10 +10,12 @@ internal static class Program
     private const string Usage = """
         kiyoctl - Razer Kiyo camera settings from the command line
 
-          kiyoctl devices                 video devices Windows knows
+          kiyoctl cameras                 USB cameras and whether they are supported
+          kiyoctl devices                 every video device Windows knows, with its device path
           kiyoctl info                    model, firmware, Razer extension unit
           kiyoctl list                    every control with value and range
-          kiyoctl probe                   raw driver properties and topology (read-only)
+          kiyoctl probe [n]               raw driver properties and topology (read-only);
+                                          n is a number from 'kiyoctl cameras', also for unsupported cameras
           kiyoctl set <control> <value>   e.g. kiyoctl set zoom 200
           kiyoctl razer <setting> <value> e.g. kiyoctl razer mirror on
                   settings: mirror on|off, nr3d on|off, nr2d on|off, metering average|center|face,
@@ -36,10 +38,12 @@ internal static class Program
         {
             return args[0] switch
             {
+                "cameras" => Cameras(),
                 "devices" => Devices(),
                 "info" => WithCamera(Info),
                 "list" => WithCamera(List),
-                "probe" => WithCamera(Probe),
+                "probe" when args.Length == 1 => WithCamera(Probe),
+                "probe" when args.Length == 2 => ProbeCamera(args[1]),
                 "set" when args.Length == 3 => WithCamera(c => Set(c, args[1], args[2])),
                 "razer" when args.Length == 3 => WithCamera(c => Razer(c, args[1], args[2])),
                 "backup" => WithCamera(Backup),
@@ -64,12 +68,43 @@ internal static class Program
     private static int WithCamera(Func<WindowsCameraBackend, int> action)
     {
         using var cam = WindowsCameraBackend.Connect();
-        if (cam is null) return Fail("No Razer Kiyo Pro Ultra or Kiyo V2 Pro found. Is it plugged in?");
+        if (cam is null)
+            return Fail($"No supported Kiyo found ({string.Join(", ", KiyoDevice.All.Select(d => d.Name))}). " +
+                        "Run 'kiyoctl cameras' to see what is plugged in.");
         return action(cam);
     }
 
-    private static IEnumerable<CameraControl> AllControls(WindowsCameraBackend cam) =>
-        K.All.Concat(cam.Device.RazerCommands ? [] : new[] { K.ExposureTime, K.Gain });
+    private static IEnumerable<CameraControl> AllControls(WindowsCameraBackend cam) => cam.Device.Controls;
+
+    /// <summary>Works without a supported camera, so it can explain why the others are not found.</summary>
+    private static int Cameras()
+    {
+        var cameras = WindowsCameraBackend.ListCameras();
+        if (cameras.Count == 0) Console.WriteLine("No USB cameras found.");
+        for (var i = 0; i < cameras.Count; i++)
+        {
+            var c = cameras[i];
+            var status = c.Status switch
+            {
+                UsbCamera.Kind.Supported => "supported",
+                UsbCamera.Kind.UnsupportedRazer => "not supported yet: " + CameraDiscovery.SupportRequestUrl(c, i + 1),
+                _ => "not a Kiyo",
+            };
+            Console.WriteLine($"{i + 1,2}  {c.Name,-26} {c.UsbId}  {status}");
+        }
+        return 0;
+    }
+
+    private static int ProbeCamera(string number)
+    {
+        var cameras = WindowsCameraBackend.ListCameras();
+        if (!int.TryParse(number, out var n) || n < 1 || n > cameras.Count)
+            return Fail($"'{number}' is not a camera number. Run 'kiyoctl cameras' to see them.");
+        using var cam = WindowsCameraBackend.Open(cameras[n - 1].Id);
+        if (cam is null) return Fail($"Could not open {cameras[n - 1].Name}.");
+        Console.WriteLine($"USB id:    {cameras[n - 1].UsbId}");
+        return Probe(cam);
+    }
 
     private static int Devices()
     {

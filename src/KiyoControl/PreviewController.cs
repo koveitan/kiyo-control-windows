@@ -24,6 +24,9 @@ public sealed class PreviewController(Image target, AppSettings settings)
     /// <summary>True when another app holds the camera, so this preview can't choose the format.</summary>
     public bool Shared { get; private set; }
 
+    /// <summary>Device path of the camera the settings control, so the preview shows the same one when several Kiyos are plugged in.</summary>
+    public string? CameraId { get; set; }
+
     /// <summary>Raised on the UI thread when modes, status or running state change.</summary>
     public event Action? StateChanged;
 
@@ -80,8 +83,11 @@ public sealed class PreviewController(Image target, AppSettings settings)
         try
         {
             var groups = await MediaFrameSourceGroup.FindAllAsync();
-            var group = groups.FirstOrDefault(g => g.SourceInfos.Any(i =>
-                KiyoDevice.All.Any(d => (i.DeviceInformation?.Id ?? "").Contains(d.UsbIdFragment, StringComparison.OrdinalIgnoreCase))));
+            static IEnumerable<string> Ids(MediaFrameSourceGroup g) => g.SourceInfos.Select(i => i.DeviceInformation?.Id ?? "");
+            // The camera the settings control; otherwise the first supported Kiyo.
+            var group = groups.FirstOrDefault(g => Ids(g).Any(id => CameraDiscovery.SameDevice(id, CameraId)))
+                        ?? groups.FirstOrDefault(g => Ids(g).Any(id =>
+                            KiyoDevice.All.Any(d => id.Contains(d.UsbIdFragment, StringComparison.OrdinalIgnoreCase))));
             if (group is null)
             {
                 SetStatus("Camera not found");

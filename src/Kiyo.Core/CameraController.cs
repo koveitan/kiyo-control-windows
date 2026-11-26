@@ -21,6 +21,8 @@ public sealed class CameraController
     public KiyoDevice Device => _camera?.Device ?? _lastDevice;
     public bool SupportsRazer => Device.RazerCommands;
     public string? FirmwareVersion => _camera?.FirmwareVersion;
+    /// <summary>The connected camera's id (device path), null when disconnected.</summary>
+    public string? CameraId => _camera?.Id;
     public IReadOnlyList<CameraControl> Controls => _controls;
 
     public ProfileStore Store { get; }
@@ -66,6 +68,13 @@ public sealed class CameraController
         catch (CameraException) { Disconnect(); }
     }
 
+    /// <summary>Drops the current camera and connects again, e.g. after the user picked another one.</summary>
+    public void Reconnect()
+    {
+        Disconnect();
+        ConnectIfPossible();
+    }
+
     /// <summary>Re-reads values from the camera.</summary>
     public void Refresh()
     {
@@ -91,8 +100,7 @@ public sealed class CameraController
         var probe = _baseControls[0];
         // If the camera does not answer, every control would wait for a timeout and startup would freeze.
         if (!TryGet(cam, probe)) { cam.Dispose(); return; }
-        // Without Razer's ISO and shutter commands, manual exposure uses the standard exposure time and gain.
-        var controls = _baseControls.Concat(cam.Device.RazerCommands ? [] : new[] { KiyoControls.ExposureTime, KiyoControls.Gain }).ToList();
+        var controls = _baseControls.Concat(cam.Device.ExposureControls).ToList();
         var r = new Dictionary<string, ControlRange>();
         foreach (var c in controls)
         {

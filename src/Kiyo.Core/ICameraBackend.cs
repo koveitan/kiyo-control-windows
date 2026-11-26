@@ -8,6 +8,9 @@ public interface ICameraBackend : IDisposable
 {
     KiyoDevice Device { get; }
 
+    /// <summary>Identifies the connected camera (on Windows, its device path), matching <see cref="UsbCamera.Id"/>.</summary>
+    string Id { get; }
+
     /// <summary>Firmware version the camera reports over USB (e.g. "8.21"), or null.</summary>
     string? FirmwareVersion { get; }
 

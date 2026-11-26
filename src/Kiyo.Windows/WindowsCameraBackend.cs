@@ -36,6 +36,7 @@ public sealed class WindowsCameraBackend : ICameraBackend
     public KiyoDevice Device { get; }
     public string? FirmwareVersion { get; }
     public VideoDeviceInfo Info { get; }
+    public string Id => Info.DevicePath;
     /// <summary>Topology node of the Razer extension unit, or null when not found / not supported.</summary>
     public int? RazerNode { get; }
 
@@ -70,19 +71,37 @@ public sealed class WindowsCameraBackend : ICameraBackend
         return result;
     }
 
-    /// <summary>Connects to the first supported Kiyo, or returns null when none is plugged in.</summary>
-    public static WindowsCameraBackend? Connect()
+    /// <summary>USB cameras Windows knows, supported or not, in Windows' order. Virtual cameras (no USB ids) are left out.</summary>
+    public static List<UsbCamera> ListCameras() =>
+        ListDevices().Select(d => UsbCamera.FromDevicePath(d.FriendlyName, d.DevicePath)).OfType<UsbCamera>().ToList();
+
+    /// <summary>
+    /// Connects to a supported Kiyo: the preferred one (by device path) if it is plugged in, otherwise the first
+    /// one found. Returns null when none is plugged in.
+    /// </summary>
+    public static WindowsCameraBackend? Connect(string? preferredId = null)
+    {
+        var chosen = CameraDiscovery.Choose(ListCameras(), preferredId);
+        return chosen?.Device is KiyoDevice device ? Open(chosen.Id, device) : null;
+    }
+
+    /// <summary>
+    /// Opens any video device by its device path. Pass null for <paramref name="device"/> to inspect a camera
+    /// that isn't supported (e.g. for <c>kiyoctl probe</c>): it is treated as having no Razer commands.
+    /// </summary>
+    public static WindowsCameraBackend? Open(string devicePath, KiyoDevice? device = null)
     {
         WindowsCameraBackend? found = null;
         foreach (var (moniker, info) in EnumerateMonikers())
         {
             try
             {
-                if (found is not null || info.Kiyo is not KiyoDevice device) continue;
+                if (found is not null || !string.Equals(info.DevicePath, devicePath, StringComparison.OrdinalIgnoreCase)) continue;
                 var iid = Guids.IID_IBaseFilter;
                 moniker.BindToObject(null!, null, ref iid, out var filter);
                 if (filter is null) continue;
-                found = new WindowsCameraBackend(info, device, filter);
+                var model = device ?? info.Kiyo ?? new KiyoDevice(info.FriendlyName, 0, 0, RazerCommands: false, FirmwareUpdater: null);
+                found = new WindowsCameraBackend(info, model, filter);
             }
             catch (COMException) { }
             finally { Marshal.ReleaseComObject(moniker); }

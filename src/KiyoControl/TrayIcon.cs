@@ -47,8 +47,21 @@ public sealed class TrayIcon : IDisposable
         var menu = _icon.ContextMenuStrip!;
         menu.Items.Clear();
         menu.Items.Add(new WinForms.ToolStripMenuItem("Open Kiyo Control", null, (_, _) => _open()) { Font = new System.Drawing.Font(menu.Font, System.Drawing.FontStyle.Bold) });
-        menu.Items.Add(new WinForms.ToolStripLabel(c.Connected ? $"{c.Device.Name} connected" : "Camera not connected") { ForeColor = System.Drawing.SystemColors.GrayText });
+        menu.Items.Add(new WinForms.ToolStripLabel(c.Connected ? $"{c.Device.Name} connected" : _model.DisconnectedTitle) { ForeColor = System.Drawing.SystemColors.GrayText });
         menu.Items.Add(new WinForms.ToolStripSeparator());
+
+        // With two or more supported cameras plugged in, switch between them.
+        if (_model.SupportedCameras.Count > 1)
+        {
+            var cameras = new WinForms.ToolStripMenuItem("Camera");
+            foreach (var camera in _model.SupportedCameras)
+            {
+                var item = new WinForms.ToolStripMenuItem(camera.Name) { Checked = CameraDiscovery.SameDevice(camera.Id, c.CameraId) };
+                item.Click += (_, _) => _model.Select(camera);
+                cameras.DropDownItems.Add(item);
+            }
+            menu.Items.Add(cameras);
+        }
 
         var profiles = new WinForms.ToolStripMenuItem("Profile");
         foreach (var name in c.ProfileNames)

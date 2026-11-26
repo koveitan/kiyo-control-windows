@@ -16,6 +16,12 @@ public sealed class AppModel
     public CameraController Controller { get; }
     public AppSettings Settings { get; } = AppSettings.Load();
 
+    /// <summary>Every USB camera plugged in, supported or not, for the camera list.</summary>
+    public List<UsbCamera> Cameras { get; private set; } = [];
+
+    /// <summary>Supported cameras plugged in right now.</summary>
+    public List<UsbCamera> SupportedCameras => Cameras.Where(c => c.Device is not null).ToList();
+
     /// <summary>Raised after every change, on the UI thread.</summary>
     public event Action? Changed;
 
@@ -23,7 +29,7 @@ public sealed class AppModel
 
     public AppModel()
     {
-        Controller = new CameraController(new ProfileStore(), () => WindowsCameraBackend.Connect());
+        Controller = new CameraController(new ProfileStore(), () => WindowsCameraBackend.Connect(Settings.PreferredCamera));
         _poll = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _poll.Tick += (_, _) => Poll();
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
@@ -49,12 +55,39 @@ public sealed class AppModel
         Changed?.Invoke();
     }
 
-    /// <summary>Refreshes the UI only when the connection changes, not on every 2-second check.</summary>
-    private void Poll()
+    /// <summary>Refreshes the UI only when the connection or the list of cameras changes, not on every 2-second check.</summary>
+    public void Poll()
     {
         var was = Controller.Connected;
         Controller.Poll();
-        if (Controller.Connected != was) Changed?.Invoke();
+        var found = WindowsCameraBackend.ListCameras();
+        var camerasChanged = !found.SequenceEqual(Cameras);
+        Cameras = found;
+        if (Controller.Connected != was || camerasChanged) Changed?.Invoke();
+    }
+
+    /// <summary>Switches to another supported camera and remembers the choice.</summary>
+    public void Select(UsbCamera camera)
+    {
+        if (camera.Device is null || CameraDiscovery.SameDevice(camera.Id, Controller.CameraId)) return;
+        Settings.PreferredCamera = camera.Id;
+        Settings.Save();
+        Perform(c => c.Reconnect());
+        Poll();
+    }
+
+    /// <summary>The camera the app connects to when it can: the chosen one if plugged in, else the first supported one.</summary>
+    public UsbCamera? ChosenCamera => CameraDiscovery.Choose(Cameras, Settings.PreferredCamera);
+
+    /// <summary>Status text while disconnected: names an unsupported Razer camera, so the reason is visible at a glance.</summary>
+    public string DisconnectedTitle
+    {
+        get
+        {
+            if (SupportedCameras.Count > 0) return "Kiyo not responding";
+            if (Cameras.FirstOrDefault(c => c.Status == UsbCamera.Kind.UnsupportedRazer) is { } razer) return $"{razer.Name} not supported";
+            return "Connect your Kiyo";
+        }
     }
 
     private void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs e)
@@ -81,6 +114,8 @@ public sealed class AppSettings
     public bool PreviewEnabled { get; set; } = true;
     public string? PreviewMode { get; set; }
     public bool TrayHintShown { get; set; }
+    /// <summary>Device path of the camera the user picked last; null means the first supported one.</summary>
+    public string? PreferredCamera { get; set; }
 
     private static string FilePath => Path.Combine(ProfileStore.DefaultRoot, "app-settings.json");
 
@@ -133,6 +168,8 @@ public static class Fmt
     /// <summary>Windows reports pan and tilt in degrees.</summary>
     public static string Degrees(int v) => $"{v}°";
     public static string Kelvin(int v) => $"{v}K";
+    /// <summary>Zoom with the field of view; the degrees are calibrated for the Pro Ultra only.</summary>
+    public static string ZoomAndFov(int zoom, bool proUltra) => proUltra ? $"{Zoom(zoom)} · {Fov(zoom)}" : Zoom(zoom);
     /// <summary>DirectShow exposure is log2 seconds: -6 is 1/64 s.</summary>
     public static string ExposureLog2(int v) => v < 0 ? $"1/{Math.Round(Math.Pow(2, -v))}S" : $"{Math.Pow(2, v):0.#}S";
 

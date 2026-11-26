@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 — unreleased
+
+Brings the Windows version up to [Kiyo Control 0.6.0](https://github.com/f0ns/kiyo-control/releases/tag/v0.6.0).
+
+- Kiyo Pro (1532:0E05) and Kiyo V2 X (1532:0E0C) support for the standard settings; Razer-only settings are hidden.
+- Camera list: when no camera connects, the settings panel lists the USB cameras plugged in and why each can or
+  can't be used. Unsupported Razer cameras link to a prefilled GitHub issue.
+- With several Kiyos plugged in, pick one in the ⋯ menu or the tray menu; the choice is remembered and the
+  preview follows it.
+- The "USB 2?" hint only shows for cameras that can stream 4K.
+- On models without Razer commands, the bottom bar shows the manual shutter speed and gain, and resetting Auto
+  Exposure also resets them.
+- `kiyoctl cameras` lists USB cameras and whether they are supported; `kiyoctl probe <n>` also works on cameras
+  that aren't supported yet.
+
 ## 0.1.1 — 2026-11-20
 
 - Fixed: after closing the window to the tray and opening it again, the preview stayed black while the camera

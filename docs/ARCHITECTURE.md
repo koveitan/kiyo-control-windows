@@ -67,6 +67,23 @@ or Azure Trusted Signing options once a certificate is available.
   [cameractrls issue #19](https://github.com/soyersoyer/cameractrls/issues/19).
 - **Firmware version** is read from the `REV_xxxx` part of the device's hardware id.
 
+## Finding cameras
+
+`WindowsCameraBackend.ListCameras()` reads DirectShow's video devices and keeps those whose device path names a
+USB vendor and product id (virtual cameras such as OBS's have none). `CameraDiscovery` in the core classifies them
+(supported, unsupported Razer, other) and chooses which one to connect to: the one the user picked last, else the
+first supported one. A camera is identified by its device path; Media Foundation (used by the preview) lists the
+same camera under a different interface GUID, so paths are compared up to that GUID (`CameraDiscovery.SameDevice`).
+
+Adding a model means adding a `KiyoDevice` with its USB ids, whether it can stream 4K, and `RazerCommands: false`
+unless its extension-unit commands are documented. On Windows the standard controls go through DirectShow, so no
+UVC unit ids are needed.
+
+## Keeping in sync with the macOS version
+
+Ported from upstream 0.6.0. When [f0ns/kiyo-control](https://github.com/f0ns/kiyo-control) changes the command
+list, the control map or the profile format, port the change to `Kiyo.Core` with its tests.
+
 ## Differences from the macOS version
 
 The macOS app sends raw UVC requests over USB. Windows doesn't allow that while its camera driver owns the device,
