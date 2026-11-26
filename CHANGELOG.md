@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — unreleased
+## 0.2.0 — 2026-11-26
 
 Based on [Kiyo Control 0.6.0 for macOS](https://github.com/f0ns/kiyo-control/releases/tag/v0.6.0).
 
